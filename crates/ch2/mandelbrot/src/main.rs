@@ -4,6 +4,7 @@ use image::codecs::png::PngEncoder;
 use image::ColorType;
 use image::ImageEncoder;
 use num::Complex;
+use rayon::prelude::*;
 use std::env;
 use std::fs::File;
 use std::str::FromStr;
@@ -24,7 +25,7 @@ fn main() {
     let lower_right = parse_complex(&args[4]).expect("error parsing lower right corner point");
 
     let mut pixels = vec![0; bounds.0 * bounds.1];
-    para_render(&mut pixels, bounds, upper_left, lower_right);
+    para_render_by_rayon(&mut pixels, bounds, upper_left, lower_right);
 
     write_image(&args[1], &pixels, bounds).expect("error writing PNG file");
 }
@@ -102,6 +103,26 @@ fn para_render(
             }
         })
         .unwrap();
+    }
+}
+
+fn para_render_by_rayon(
+    pixels: &mut [u8],
+    bounds: (usize, usize),
+    upper_left: Complex<f64>,
+    lower_right: Complex<f64>,
+) {
+    {
+        let bands: Vec<(usize, &mut [u8])> = pixels.chunks_mut(bounds.0).enumerate().collect();
+
+        bands.into_par_iter().for_each(|(i, band)| {
+            let top = i;
+            let band_bounds = (bounds.0, 1);
+            let band_upper_left = pixel_to_point(bounds, (0, top), upper_left, lower_right);
+            let band_lower_right =
+                pixel_to_point(bounds, (bounds.0, top + 1), upper_left, lower_right);
+            render(band, band_bounds, band_upper_left, band_lower_right);
+        });
     }
 }
 
