@@ -2,5 +2,7 @@
 members = [
     "crates/ch2/*",
     "crates/examples/*",
+    "rust-brain-teasers/*",
+    "weekly-rust/*",
 ]
 resolver = "2"
