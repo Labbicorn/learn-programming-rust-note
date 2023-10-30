@@ -13,12 +13,12 @@
 // bob.add_friend(alice)
 
 #[derive(Debug, Clone)]
-pub struct Person {
+pub struct Person<'a> {
     pub name: String,
-    pub friends: Vec<Person>,
+    pub friends: Vec<&'a Person<'a>>,
 }
 
-impl Person {
+impl<'a> Person<'a> {
     pub fn new(name: &str) -> Person {
         Person {
             name: name.into(),
@@ -26,7 +26,7 @@ impl Person {
         }
     }
 
-    pub fn add_friend(&mut self, other: Person) {
+    pub fn add_friend(&mut self, other: &'a Person) {
         self.friends.push(other);
     }
 }
@@ -36,7 +36,17 @@ impl Person {
 fn test_person() {
     let mut alice = Person::new("Alice");
     let mut bob = Person::new("Bob");
-    alice.add_friend(bob.clone());
-    bob.add_friend(alice); // error: borrow of moved value: `bob`
-                           // value borrowed here after move
+    // alice.add_friend(&bob);
+    // bob.add_friend(&alice);
+
+    // error[E0502]: cannot borrow `bob` as mutable because it is also borrowed as immutable
+    // --> weekly-rust/object-soup/src/lib.rs:40:5
+    // |
+    // 39 |     alice.add_friend(&bob);
+    // |                      ---- immutable borrow occurs here
+    // 40 |     bob.add_friend(&alice); // error: borrow of moved value: `bob`
+    // |     ^^^^----------^^^^^^^^
+    // |     |   |
+    // |     |   immutable borrow later used by call
+    // |     mutable borrow occurs here
 }
