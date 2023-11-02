@@ -4,5 +4,6 @@ members = [
     "crates/examples/*",
     "rust-brain-teasers/*",
     "weekly-rust/*",
+    "blockchain/*",
 ]
 resolver = "2"
